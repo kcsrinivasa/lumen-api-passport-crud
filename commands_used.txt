@@ -1,0 +1,109 @@
+--install project --
+	composer create-project --prefer-dist laravel/lumen lumen-passport
+
+--install flpbox for install make artisan commands--
+	composer require flipbox/lumen-generator
+--add this in bootstrap/app.php--
+	$app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
+
+
+--genrate key--
+	php artisan key:generate
+
+--create model,controller,factory,resource,migration
+	php artisan make:model Post -fmcr
+
+
+--uncomment bellow line in bootstrap/app.php
+	$app->withFacades();
+	$app->withEloquent();
+
+***** For passport authentication******
+	php artisan make:migration create_users_table --create=users
+	php artisan make:controller AuthController
+
+	composer require dusterio/lumen-passport
+
+--Enable auth middleware uncomment bellow line in bootstrap/app.php 
+	$app->routeMiddleware([
+	    'auth' => App\Http\Middleware\Authenticate::class,
+	]);
+
+--Register the service providers, Laravel Passport and Lumen adapter in bootstrap/app.php
+	$app->register(Laravel\Passport\PassportServiceProvider::class);
+
+--create config\auth.php file and add the code--
+	return [
+    'defaults' => [
+        'guard' => 'api',
+        'passwords' => 'users',
+    ],
+
+    'guards' => [
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
+    ],
+
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\User::class
+        ]
+    ]
+];
+
+--update the configure app to auth in bootstrap/app.php 
+	$app->configure('auth');
+
+
+--load passport in App\Models\User.php
+	use Laravel\Passport\HasApiTokens;
+	use HasApiTokens;
+
+-- Create new tables for Passport
+	php artisan migrate
+
+-- Install encryption keys and other stuff for Passport
+	php artisan passport:install
+
+
+
+Ref : https://github.com/dusterio/lumen-passport
+=======================================================================================
+For forgot password/ send mail
+
+--install the illuminate/mail package via Composer.
+    composer require illuminate/mail
+
+--register following in bootstrap/app.php
+    $app->register(Illuminate\Mail\MailServiceProvider::class);
+    $app->configure('mail');
+
+--uncomment the following in bootstrap/app.php
+    $app->withFacades();
+
+--create config folder and create mail.php, add the mail configuration
+
+--create mail class
+    php artisan make:mail SendForgotPasswordMail
+
+--use mail in controller
+    use Illuminate\Support\Facades\Mail;
+
+--create mail.blade.php in resource/views/
+
+--add below in .env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=<Enter your Gmail Id>
+MAIL_PASSWORD=<Enter your Gmail Password>
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_NAME=<From user name>
+
+Ref :https://medium.com/@easyselva/sending-mail-in-lumen-via-smtp-ded1079767cb
+
+
+
